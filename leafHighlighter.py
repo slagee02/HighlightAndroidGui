@@ -1,8 +1,13 @@
 from PIL import Image, ImageDraw
 import sys
 import re
+import os
 
 # input should be filename of the shared name between xml and png file pair without the extension ex) insert file1 (file1.xml and file1.png)
+
+# prepare output directory
+if not os.path.exists("output"):
+    os.mkdir("output")
 
 # iterate through each provided file
 for i in range(1, len(sys.argv)):
@@ -33,4 +38,6 @@ for i in range(1, len(sys.argv)):
 
                 # highlight
                 draw.rectangle(nums, outline=(255, 255, 0), width=8)
-        image.show()
+
+        path = "output/"+sys.argv[i]+"_highlighted.png"
+        image.save(path)
