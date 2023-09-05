@@ -1,34 +1,36 @@
 from PIL import Image, ImageDraw
 import sys
+import re
 
-# first img is 'com.apalon.ringtones.png'
-# first file is 'com.apalon.ringtones.xml'
-if len(sys.argv) != 3 or sys.argv[1][-4:] != '.xml' or sys.argv[2][-4:] != '.png':
-    print("improper arguments")
-else:
-    xml = sys.argv[1]
-    image = Image.open(sys.argv[2])
+# input should be filename of the shared name between xml and png file pair without the extension ex) insert file1 (file1.xml and file1.png)
+
+# iterate through each provided file
+for i in range(1, len(sys.argv)):
+    # open the image for drawing and the xml for reading
+    xml = sys.argv[i] + '.xml'
+    image = Image.open(sys.argv[i] + '.png')
     draw = ImageDraw.Draw(image)
 
-    file = open(xml, 'r')
     with open(xml, mode='r') as file:
         content = file.read()
+        # split xml by nodes
         lines = content.split('<node ')
-        count = 0  # just to count leafs
+
+        # gor though nodes
         for line in lines:
 
-            if '/>' in line:  # leaf
-                # get bounds
-                count += 1
-                bounds = line.partition(" ")[0]
+            # look for leaf nodes which end with />
+            if '/>' in line:
 
-                # DO THIS MORE EFFICIENTLY
-                bounds = bounds.split('"')[1]
-                bounds = bounds.replace('[', '')
-                bounds = bounds.replace(']', ',')
-                bounds = bounds.split(',')
-                bounds = (int(bounds[0]), int(bounds[1]),
-                          int(bounds[2]), int(bounds[3]))
-                draw.rectangle(bounds, outline=(255, 255, 0), width=8)
-    # print(count)
-    image.show()
+                # get the bounds string (bounds="[num,num][num,num]")
+                bounds_str = re.findall(
+                    r'bounds=\"\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+', line)[0]
+
+                # pull out the bounds
+                nums = re.findall(r'[0-9]+', bounds_str)
+                nums = (int(nums[0]), int(nums[1]),
+                        int(nums[2]), int(nums[3]))
+
+                # highlight
+                draw.rectangle(nums, outline=(255, 255, 0), width=8)
+        image.show()
